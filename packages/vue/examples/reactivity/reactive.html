@@ -8,7 +8,10 @@
     <script src="../../dist/vue.js"></script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <p id="p1"></p>
+      <p id="p2"></p>
+    </div>
   </body>
   <script>
     const { reactive, effect } = Vue
@@ -16,7 +19,10 @@
       name: '张三'
     })
     effect(() => {
-      document.querySelector('#app').innerText = obj.name
+      document.querySelector('#p1').innerText = obj.name
+    })
+    effect(() => {
+      document.querySelector('#p2').innerText = obj.name
     })
     setTimeout(() => {
       obj.name = '李四'

@@ -10,6 +10,13 @@ export const isObject = (obj: unknown) => {
   return obj !== null && typeof obj === 'object'
 }
 
+/**
+ * 对比两个数据是否发生改变
+ */
 export const hasChange = (newVal: any, oldVal: any): boolean => {
   return !Object.is(newVal, oldVal)
+}
+
+export const isFunction = (val: unknown): val is Function => {
+  return typeof val === 'function'
 }

@@ -1,14 +1,25 @@
-import { isArray } from '@vue/shared'
+import { extend, isArray } from '@vue/shared'
 import { computedRefImpl } from './computed'
 import { createDep, Dep } from './dep'
 
 export type EffectScheduler = (...args: any[]) => any
 type KeyToDepMap = Map<any, Dep>
+
+export interface ReactiveEffectOptions {
+  lazy?: boolean
+  scheduler?: EffectScheduler
+}
 const targetMap = new WeakMap<any, KeyToDepMap>()
 
-export function effect<T = any>(fn: () => T) {
+export function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions) {
   const _effect = new ReactiveEffect(fn)
-  _effect.run()
+  if (options) {
+    extend(_effect, options)
+  }
+  // 非 lazy 的时候才执行 run 函数
+  if (!options || !options.lazy) {
+    _effect.run()
+  }
 }
 
 export let activeEffect: ReactiveEffect | undefined

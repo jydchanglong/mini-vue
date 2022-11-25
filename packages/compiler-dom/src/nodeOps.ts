@@ -19,5 +19,14 @@ export const nodeOps = {
    */
   setElementText(el, text) {
     el.textContent = text
+  },
+  /**
+   * 移除 dom
+   */
+  remove(el: Element) {
+    const parent = el.parentNode
+    if (parent) {
+      parent.removeChild(el)
+    }
   }
 }

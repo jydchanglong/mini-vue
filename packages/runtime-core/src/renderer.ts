@@ -1,5 +1,6 @@
+import { EMPTY_OBJ } from '@vue/shared'
 import { ShapeFlags } from 'packages/shared/src/shapeFlags'
-import { Comment, Fragment, Text } from './vnode'
+import { Comment, Fragment, isSameVNodeType, Text } from './vnode'
 
 export interface RendererOptions {
   /**
@@ -18,6 +19,10 @@ export interface RendererOptions {
    * 创建指定的 Element
    */
   createElement(type: string)
+  /**
+   * 卸载 dom
+   */
+  remove(el: Element): void
 }
 
 export function createRenderer(options: RendererOptions) {
@@ -32,7 +37,8 @@ function createBaseRenderer(options: RendererOptions): any {
     insert: hostInsert,
     patchProp: hostPatchProp,
     createElement: hostCreateElement,
-    setElementText: hostSetElementText
+    setElementText: hostSetElementText,
+    remove: hostRemove
   } = options
 
   const processElement = (oldVNode, newVNode, container, anchor) => {
@@ -41,6 +47,7 @@ function createBaseRenderer(options: RendererOptions): any {
       mountElement(newVNode, container, anchor)
     } else {
       // 更新
+      patchElement(oldVNode, newVNode)
     }
   }
 
@@ -68,6 +75,86 @@ function createBaseRenderer(options: RendererOptions): any {
     hostInsert(el, container, anchor)
   }
   /**
+   * 更新 Element
+   */
+  const patchElement = (oldVNode, newVNode) => {
+    // debugger
+    const el = (newVNode.el = oldVNode.el!)
+    const oldProps = oldVNode.props
+    const newProps = newVNode.props
+    // 更新 chidren
+    patchChildren(oldVNode, newVNode, el, null)
+
+    // 更新 props
+    patchProps(el, newVNode, oldProps, newProps)
+  }
+
+  /**
+   * 为子节点打补丁
+   */
+  const patchChildren = (oldVNode, newVNode, container, anchor) => {
+    // 旧节点
+    const c1 = oldVNode && oldVNode.children
+    const prevShapeFlag = oldVNode ? oldVNode.shapeFlag : 0
+    // 新节点
+    const c2 = newVNode.children
+    const { shapeFlag } = newVNode
+    // 如果新子节点为 TEXT_CHILDREN
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      // 如果旧子节点为 ARRAY_CHILDREN
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 卸载旧节点
+      }
+      if (c2 !== c1) {
+        hostSetElementText(container, c2)
+      }
+    } else {
+      // 如果旧子节点是 ARRAY_CHILDREN
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 如果新子节点也是 ARRAY_CHILDREN
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          // diff 运算
+        } else {
+          // 新子节点不是 ARRAY_CHILDREN，则直接卸载旧节点
+        }
+      } else {
+        // 如果旧子节点是 TEXT_CHILDREN
+        if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+          // 删除旧文本
+          hostSetElementText(container, '')
+        }
+        // 新子节点为 ARRAY_CHILDREN
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          // 挂载新子节点
+        }
+      }
+    }
+  }
+  /**
+   * 为 props 打补丁
+   */
+  const patchProps = (el, newVNode, oldProps, newProps) => {
+    if (oldProps !== newProps) {
+      // 遍历新属性，更新 props
+      for (const key in newProps) {
+        const prev = oldProps[key]
+        const next = newProps[key]
+        if (prev !== next) {
+          hostPatchProp(el, key, prev, next)
+        }
+      }
+
+      if (oldProps !== EMPTY_OBJ) {
+        // 如果新属性里不包含旧属性，旧删除旧属性
+        for (const key in oldProps) {
+          if (!(key in newProps)) {
+            hostPatchProp(el, key, oldProps[key], null)
+          }
+        }
+      }
+    }
+  }
+  /**
    * 补丁函数
    */
   const patch = (oldVNode, newVNode, container, anchor = null) => {
@@ -75,6 +162,13 @@ function createBaseRenderer(options: RendererOptions): any {
     if (oldVNode === newVNode) {
       return
     }
+
+    // 判断是否为相同节点类型
+    if (oldVNode && !isSameVNodeType(oldVNode, newVNode)) {
+      unmount(oldVNode)
+      oldVNode = null
+    }
+
     const { type, shapeFlag } = newVNode
     switch (type) {
       case Text:
@@ -98,10 +192,17 @@ function createBaseRenderer(options: RendererOptions): any {
   const render = (vnode, container) => {
     if (vnode === null) {
       // 卸载
+      if (container._vnode) {
+        unmount(container._vnode)
+      }
     } else {
       patch(container._vnode || null, vnode, container)
     }
     container._vnode = vnode
+  }
+
+  const unmount = vnode => {
+    hostRemove(vnode.el!)
   }
 
   return {

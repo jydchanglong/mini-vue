@@ -23,6 +23,14 @@ export interface RendererOptions {
    * 卸载 dom
    */
   remove(el: Element): void
+  /**
+   * 创建 Text 节点
+   */
+  createText(text: string)
+  /**
+   * 更新 Text 节点
+   */
+  setText(node, text): void
 }
 
 export function createRenderer(options: RendererOptions) {
@@ -38,8 +46,24 @@ function createBaseRenderer(options: RendererOptions): any {
     patchProp: hostPatchProp,
     createElement: hostCreateElement,
     setElementText: hostSetElementText,
-    remove: hostRemove
+    remove: hostRemove,
+    createText: hostCreateText,
+    setText: hostSetText
   } = options
+
+  const processText = (oldVNode, newVNode, container, anchor) => {
+    if (oldVNode == null) {
+      // 挂载节点
+      newVNode.el = hostCreateText(newVNode.children as string)
+      hostInsert(newVNode.el, container, anchor)
+    } else {
+      // 更新节点
+      const el = (newVNode.el = oldVNode.el!)
+      if (oldVNode.children !== newVNode.children) {
+        hostSetText(el, newVNode.children as string)
+      }
+    }
+  }
 
   const processElement = (oldVNode, newVNode, container, anchor) => {
     if (oldVNode == null) {
@@ -82,7 +106,7 @@ function createBaseRenderer(options: RendererOptions): any {
     const el = (newVNode.el = oldVNode.el!)
     const oldProps = oldVNode.props
     const newProps = newVNode.props
-    // 更新 chidren
+    // 更新 children
     patchChildren(oldVNode, newVNode, el, null)
 
     // 更新 props
@@ -172,6 +196,7 @@ function createBaseRenderer(options: RendererOptions): any {
     const { type, shapeFlag } = newVNode
     switch (type) {
       case Text:
+        processText(oldVNode, newVNode, container, anchor)
         break
       case Comment:
         break

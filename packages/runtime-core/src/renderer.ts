@@ -1,5 +1,6 @@
-import { EMPTY_OBJ } from '@vue/shared'
+import { EMPTY_OBJ, isString } from '@vue/shared'
 import { ShapeFlags } from 'packages/shared/src/shapeFlags'
+import { normalizeVNode } from './componentRenderUtils'
 import { Comment, Fragment, isSameVNodeType, Text } from './vnode'
 
 export interface RendererOptions {
@@ -52,6 +53,16 @@ function createBaseRenderer(options: RendererOptions): any {
     setText: hostSetText,
     createComment: hostCreateComment
   } = options
+
+  const processFragment = (oldVNode, newVNode, container, anchor) => {
+    if (oldVNode == null) {
+      // 挂载 children
+      mountChildren(newVNode.children, container, anchor)
+    } else {
+      // 更新 children
+      patchChildren(oldVNode, newVNode, container, anchor)
+    }
+  }
 
   const processComment = (oldVNode, newVNode, container, anchor) => {
     if (oldVNode == null) {
@@ -123,6 +134,17 @@ function createBaseRenderer(options: RendererOptions): any {
 
     // 更新 props
     patchProps(el, newVNode, oldProps, newProps)
+  }
+
+  const mountChildren = (children, container, anchor) => {
+    if (isString(children)) {
+      children = children.split('')
+    }
+
+    for (let i = 0; i < children.length; i++) {
+      const child = (children[i] = normalizeVNode(children[i]))
+      patch(null, child, container, anchor)
+    }
   }
 
   /**
@@ -214,6 +236,7 @@ function createBaseRenderer(options: RendererOptions): any {
         processComment(oldVNode, newVNode, container, anchor)
         break
       case Fragment:
+        processFragment(oldVNode, newVNode, container, anchor)
         break
 
       default:

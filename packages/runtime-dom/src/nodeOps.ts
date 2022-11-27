@@ -41,5 +41,12 @@ export const nodeOps = {
    */
   setText(node, text) {
     node.nodeValue = text
+  },
+  /**
+   * 创建 Comment 节点
+   */
+  createComment(text: string) {
+    const node = doc.createComment(text)
+    return node
   }
 }

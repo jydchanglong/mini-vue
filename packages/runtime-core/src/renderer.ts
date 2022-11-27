@@ -31,6 +31,7 @@ export interface RendererOptions {
    * 更新 Text 节点
    */
   setText(node, text): void
+  createComment(text: string)
 }
 
 export function createRenderer(options: RendererOptions) {
@@ -48,8 +49,19 @@ function createBaseRenderer(options: RendererOptions): any {
     setElementText: hostSetElementText,
     remove: hostRemove,
     createText: hostCreateText,
-    setText: hostSetText
+    setText: hostSetText,
+    createComment: hostCreateComment
   } = options
+
+  const processComment = (oldVNode, newVNode, container, anchor) => {
+    if (oldVNode == null) {
+      newVNode.el = hostCreateComment(newVNode.children)
+      hostInsert(newVNode.el, container, anchor)
+    } else {
+      // comment 节点只有挂载，没有更新
+      newVNode.el = oldVNode.el
+    }
+  }
 
   const processText = (oldVNode, newVNode, container, anchor) => {
     if (oldVNode == null) {
@@ -199,6 +211,7 @@ function createBaseRenderer(options: RendererOptions): any {
         processText(oldVNode, newVNode, container, anchor)
         break
       case Comment:
+        processComment(oldVNode, newVNode, container, anchor)
         break
       case Fragment:
         break

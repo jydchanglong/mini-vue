@@ -1,6 +1,9 @@
 import { EMPTY_OBJ, isString } from '@vue/shared'
+import { ReactiveEffect } from 'packages/reactivity/src/effect'
 import { ShapeFlags } from 'packages/shared/src/shapeFlags'
-import { normalizeVNode } from './componentRenderUtils'
+import { createComponentInstance, setupComponent } from './component'
+import { normalizeVNode, renderComponentRoot } from './componentRenderUtils'
+import { queuePreFlushCb } from './scheduler'
 import { Comment, Fragment, isSameVNodeType, Text } from './vnode'
 
 export interface RendererOptions {
@@ -86,6 +89,45 @@ function createBaseRenderer(options: RendererOptions): any {
         hostSetText(el, newVNode.children as string)
       }
     }
+  }
+
+  const processComponent = (oldVNode, newVNode, container, anchor) => {
+    if (oldVNode == null) {
+      // 挂载
+      mountComponnet(newVNode, container, anchor)
+    } else {
+    }
+  }
+
+  const mountComponnet = (initialVNode, container, anchor) => {
+    // 生成组件实例
+    initialVNode.component = createComponentInstance(initialVNode)
+    const instance = initialVNode.component
+    // 标准化组件实例数据
+    setupComponent(instance)
+
+    // 设置组件渲染
+    setupRenderEffect(instance, initialVNode, container, anchor)
+  }
+
+  const setupRenderEffect = (instance, initialVNode, container, anchor) => {
+    // 挂载、更新方法
+    const componentUpdateFn = () => {
+      if (!instance.isMounted) {
+        const subTree = (instance.subTree = renderComponentRoot(instance))
+        patch(null, subTree, container, anchor)
+        initialVNode.el = subTree.el
+      } else {
+      }
+    }
+
+    const effect = (instance.effect = new ReactiveEffect(
+      componentUpdateFn,
+      () => queuePreFlushCb(update)
+    ))
+
+    const update = (instance.update = () => effect.run())
+    update()
   }
 
   const processElement = (oldVNode, newVNode, container, anchor) => {
@@ -243,6 +285,7 @@ function createBaseRenderer(options: RendererOptions): any {
         if (shapeFlag & ShapeFlags.ELEMENT) {
           processElement(oldVNode, newVNode, container, anchor)
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          processComponent(oldVNode, newVNode, container, anchor)
         }
         break
     }

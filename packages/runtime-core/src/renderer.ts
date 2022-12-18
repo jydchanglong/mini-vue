@@ -114,8 +114,19 @@ function createBaseRenderer(options: RendererOptions): any {
     // 挂载、更新方法
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
+        const { bm, m } = instance
+
+        // beforeMount hook
+        if (bm) {
+          bm()
+        }
         const subTree = (instance.subTree = renderComponentRoot(instance))
         patch(null, subTree, container, anchor)
+
+        // mounted hook
+        if (m) {
+          m()
+        }
         initialVNode.el = subTree.el
       } else {
       }

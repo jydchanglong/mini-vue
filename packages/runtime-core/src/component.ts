@@ -1,3 +1,6 @@
+import { reactive } from '@vue/reactivity'
+import { isObject } from '@vue/shared'
+
 let uid = 0
 
 export function createComponentInstance(vnode) {
@@ -28,4 +31,17 @@ function setupStatefullComponent(instance) {
 export function finishComponentSetup(instance) {
   const Component = instance.type
   instance.render = Component.render
+  // 改变 options 中 this 的指向
+  applyOptions(instance)
+}
+
+function applyOptions(instance) {
+  const { data: dataOptions } = instance.type
+
+  if (dataOptions) {
+    const data = dataOptions()
+    if (isObject(data)) {
+      instance.data = reactive(data)
+    }
+  }
 }

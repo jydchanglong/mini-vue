@@ -128,7 +128,22 @@ function createBaseRenderer(options: RendererOptions): any {
           m()
         }
         initialVNode.el = subTree.el
+        instance.isMounted = true
       } else {
+        // 更新组件
+        let { next, vnode } = instance
+        if (!next) {
+          next = vnode
+        }
+
+        const nextTree = renderComponentRoot(instance)
+        const prevTree = instance.subTree
+
+        instance.subTree = nextTree
+
+        patch(prevTree, nextTree, container, anchor)
+
+        next.el = nextTree.el
       }
     }
 

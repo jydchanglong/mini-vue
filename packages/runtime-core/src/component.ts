@@ -1,5 +1,5 @@
 import { reactive } from '@vue/reactivity'
-import { isObject } from '@vue/shared'
+import { isFunction, isObject } from '@vue/shared'
 import { onBeforeMount, onMounted } from './apiLifecycle'
 
 // 生命周期钩子
@@ -40,12 +40,29 @@ export function setupComponent(instance) {
 }
 
 function setupStatefullComponent(instance) {
+  const Component = instance.type
+  const { setup } = Component
+  if (setup) {
+    const setupResult = setup()
+    handleSetupResult(instance, setupResult)
+  } else {
+    finishComponentSetup(instance)
+  }
+}
+
+export function handleSetupResult(instance, setupResult) {
+  if (isFunction(setupResult)) {
+    instance.render = setupResult
+  }
   finishComponentSetup(instance)
 }
 
 export function finishComponentSetup(instance) {
   const Component = instance.type
-  instance.render = Component.render
+
+  if (!instance.render) {
+    instance.render = Component.render
+  }
   // 改变 options 中 this 的指向
   applyOptions(instance)
 }

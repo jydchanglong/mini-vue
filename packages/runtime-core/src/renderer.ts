@@ -179,6 +179,7 @@ function createBaseRenderer(options: RendererOptions): any {
       hostSetElementText(el, vnode.children)
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       // 设置数组子节点
+      mountChildren(vnode.children, el, anchor)
     }
     // 3. 设置属性
     if (props) {
@@ -240,6 +241,7 @@ function createBaseRenderer(options: RendererOptions): any {
         // 如果新子节点也是 ARRAY_CHILDREN
         if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
           // diff 运算
+          patchKeyedChildren(c1, c2, container, anchor)
         } else {
           // 新子节点不是 ARRAY_CHILDREN，则直接卸载旧节点
         }
@@ -254,6 +256,33 @@ function createBaseRenderer(options: RendererOptions): any {
           // 挂载新子节点
         }
       }
+    }
+  }
+
+  /**
+   * diff
+   */
+  const patchKeyedChildren = (
+    oldChildren,
+    newChildren,
+    container,
+    parentAnchor
+  ) => {
+    let i = 0
+    let oldChildrenLength = oldChildren.length
+    let newChildrenLength = newChildren.length
+    let oldChildrenEnd = oldChildrenLength - 1
+    let newChildrenEnd = newChildrenLength - 1
+
+    while (i <= oldChildrenEnd && i <= newChildrenEnd) {
+      const oldVNode = oldChildren[i]
+      const newVNode = normalizeVNode(newChildren[i])
+      if (isSameVNodeType(oldVNode, newVNode)) {
+        patch(oldVNode, newVNode, container, null)
+      } else {
+        break
+      }
+      i++
     }
   }
   /**

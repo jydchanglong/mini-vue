@@ -274,6 +274,7 @@ function createBaseRenderer(options: RendererOptions): any {
     let oldChildrenEnd = oldChildrenLength - 1
     let newChildrenEnd = newChildrenLength - 1
 
+    // from start
     while (i <= oldChildrenEnd && i <= newChildrenEnd) {
       const oldVNode = oldChildren[i]
       const newVNode = normalizeVNode(newChildren[i])
@@ -283,6 +284,21 @@ function createBaseRenderer(options: RendererOptions): any {
         break
       }
       i++
+    }
+
+    // from end
+    while (i <= oldChildrenEnd && i <= newChildrenEnd) {
+      const oldVNode = oldChildren[oldChildrenEnd]
+      const newVNode = normalizeVNode(newChildren[newChildrenEnd])
+
+      if (isSameVNodeType(oldVNode, newVNode)) {
+        patch(oldVNode, newVNode, container, null)
+      } else {
+        break
+      }
+
+      oldChildrenEnd--
+      newChildrenEnd--
     }
   }
   /**

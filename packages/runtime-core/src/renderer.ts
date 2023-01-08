@@ -312,6 +312,12 @@ function createBaseRenderer(options: RendererOptions): any {
           i++
         }
       }
+    } else if (i > newChildrenEnd) {
+      // 旧节点多余新节点
+      while (i <= oldChildrenEnd) {
+        unmount(oldChildren[i])
+        i++
+      }
     }
   }
   /**

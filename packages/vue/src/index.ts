@@ -8,4 +8,6 @@ export {
   Fragment
 } from '@vue/runtime-core'
 
+export { compile } from '@vue/compiler-dom'
+
 export { render } from '@vue/runtime-dom'

@@ -1,6 +1,3 @@
-/**
- * 节点类型（我们这里复制了所有的节点类型，但是我们实际上只用到了极少的部分）
- */
 export const enum NodeTypes {
   ROOT,
   ELEMENT,

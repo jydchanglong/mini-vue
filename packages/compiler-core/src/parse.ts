@@ -11,13 +11,24 @@ export interface ParserContext {
 export function baseParse(content: string) {
   const context = createParserContext(content)
   const children = parseChildren(context, [])
-  console.log(children)
-  return {}
+  // console.log(children)
+  return createRoot(children)
 }
 
 function createParserContext(content: string): ParserContext {
   return {
     source: content
+  }
+}
+
+/**
+ * 生成 root 节点
+ */
+export function createRoot(children) {
+  return {
+    type: NodeTypes.ROOT,
+    children,
+    log: {}
   }
 }
 

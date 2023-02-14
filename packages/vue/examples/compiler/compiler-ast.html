@@ -11,9 +11,18 @@
     <div id="app"></div>
   </body>
   <script>
-    const { compile } = Vue
+    const { compile, h, render } = Vue
     const template = `<div>hello world</div>`
+    const { code } = compile(template)
+    console.log(code)
+    const renderFn = new Function(code)()
 
-    const renderFn = compile(template)
+    const component = {
+      render: renderFn
+    }
+
+    const vnode = h(component)
+
+    render(vnode, document.querySelector('#app'))
   </script>
 </html>

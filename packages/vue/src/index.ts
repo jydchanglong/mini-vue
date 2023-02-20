@@ -9,6 +9,10 @@ export {
   createElementVNode
 } from '@vue/runtime-core'
 
-export { compile } from '@vue/compiler-dom'
+// export { compile } from '@vue/compiler-dom'
 
 export { render } from '@vue/runtime-dom'
+
+export * from '@vue/vue-compat'
+
+export { toDisplayString } from '@vue/shared'

@@ -1,5 +1,6 @@
 import { NodeTypes } from './ast'
 import { isSingleElementRoot } from './hoistStatic'
+import { TO_DISPLAY_STRING } from './runtimeHelpers'
 
 export function transform(root, options) {
   // 创建 transform 上下文
@@ -21,11 +22,11 @@ export function transform(root, options) {
 export interface TransformContext {
   root // ast 根节点
   parent: ParentNode | null // 每次转化时记录的父节点
-  childIndex: number // 每次转化时记录的子节点索引
   currentNode // 当前处理的节点
   helpers: Map<symbol, number> // key 值为 Symbol(方法名)，表示 render 函数中创建节点的方法
   helper<T extends symbol>(name: T): T
   nodeTransforms: any[] // 转化方法集合
+  childIndex: number
 }
 
 // 创建 transform 上下文
@@ -75,7 +76,9 @@ export function traverseNode(node, context) {
     case NodeTypes.ELEMENT:
     case NodeTypes.ROOT:
       traverseChildren(node, context)
-
+      break
+    case NodeTypes.INTERPOLATION:
+      context.helper(TO_DISPLAY_STRING)
       break
   }
 

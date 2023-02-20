@@ -102,3 +102,9 @@ function applyOptions(instance) {
 function callHook(hook: Function, proxy) {
   hook.bind(proxy)()
 }
+
+let compile
+
+export function registerRuntimeCompiler(_compile: any) {
+  compile = _compile
+}

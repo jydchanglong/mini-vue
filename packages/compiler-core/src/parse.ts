@@ -138,6 +138,9 @@ function parseTag(context: any, type: TagType) {
 
   advanceBy(context, match[0].length)
 
+  advanceSpace(context)
+  let props = parseAttributes(context, type)
+
   let isSelfClosing = startsWith(context.source, '/>')
   advanceBy(context, isSelfClosing ? 2 : 1)
 
@@ -147,7 +150,68 @@ function parseTag(context: any, type: TagType) {
     type: NodeTypes.ELEMENT,
     tag,
     tagType,
-    props: []
+    props
+  }
+}
+
+function advanceSpace(context: ParserContext): void {
+  const match = /^[\t\r\n\f ]+/.exec(context.source)
+  if (match) {
+    advanceBy(context, match[0].length)
+  }
+}
+
+/**
+ * 解析属性与指令
+ */
+function parseAttributes(context, type) {
+  const props: any = []
+  // 属性名数组
+  const attributeNames = new Set<string>()
+  // 循环解析找到标签结束
+  while (
+    context.source.length > 0 &&
+    !startsWith(context.source, '>') &&
+    !startsWith(context.source, '/>')
+  ) {
+    // 具体某个属性的处理
+    const attr = parseAttribute(context, attributeNames)
+    if (type === TagType.Start) {
+      props.push(attr)
+    }
+    advanceSpace(context)
+  }
+  return props
+}
+
+/**
+ * 处理指定指令，返回指令节点
+ */
+function parseAttribute(context: ParserContext, nameSet: Set<string>) {
+  // 获取属性名
+  const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)!
+  const name = match[0]
+  nameSet.add(name)
+
+  advanceBy(context, name.length)
+
+  // 获取属性值
+  let value: any = undefined
+
+  if (/^[\t\r\n\f ]*=/.test(context.source)) {
+    advanceSpace(context)
+    advanceBy(context, 1)
+    advanceSpace(context)
+    value = parseAttributeValue(context)
+  }
+
+  // 专门处理 v- 的指令
+  if (/^(v-[A-Za-z0-9-]|:|\.|@|#)/.test(name)) {
+    // 获取指令名称
+    const match =
+      /(?:^v-([a-z0-9-]+))?(?:(?::|^\.|^@|^#)(\[[^\]]+\]|[^\.]+))?(.+)?$/i.exec(
+        name
+      )!
   }
 }
 
